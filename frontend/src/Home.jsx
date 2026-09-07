@@ -1,5 +1,4 @@
 import React from "react";
-import Footer from "./Footer";
 
 function Home() {
   return (
@@ -48,7 +47,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="row m-0 p-5">
+      <div className="row m-0 p-5 bg-light">
         <div className="col-lg-6 col-md-8 col-12 m-auto p-lg-5 p-0 text-center">
           <small
             className="fw-semibold text-nowrap"
@@ -68,7 +67,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="row m-0 p-5">
+      <div className="row m-0 p-5 bg-light">
         <div className="col-lg-6 col-md-9 col-12 m-0 p-0 m-auto">
           <div className="row m-0 p-0">
             <div className="col-md-4 col-12 d-flex flex-column align-items-center justify-content-center text-center m-0 p-2">
@@ -101,13 +100,12 @@ function Home() {
         </div>
       </div>
 
-      <div className="row m-0 p-0">
+      <div className="row m-0 p-lg-5 p-3 bg-light">
         <h1 className="text-center text-dark fw-normal w-full p-2">
           <em>Our Seasonal Bestsellers!</em>
         </h1>
 
         <div className="row m-0 p-0 px-5 m-auto">
-
           <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
             <img
               src="./s1.webp"
@@ -115,8 +113,9 @@ function Home() {
               className="w-100 h-75 my-3 object-fit-cover"
             ></img>
 
-            <h5 className="font-bold text-dark text-center"><em>Pink Flower Tree </em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$18.00</h6>
+            <h5 className="font-bold text-dark text-center">
+              <em>Pink Flower Tree </em>
+            </h5>
           </div>
 
           <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
@@ -125,8 +124,9 @@ function Home() {
               alt="Flower 2"
               className="w-100 h-75 my-3 object-fit-cover"
             ></img>
-            <h5 className="font-bold text-dark text-center"><em>Premium Joyful </em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$18.00</h6>
+            <h5 className="font-bold text-dark text-center">
+              <em>Premium Joyful </em>
+            </h5>
           </div>
 
           <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
@@ -135,8 +135,9 @@ function Home() {
               alt="Flower 3"
               className="w-100 h-75 my-3 object-fit-cover"
             ></img>
-            <h5 className="font-bold text-dark text-center"><em>The White Rose </em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$16.00</h6>
+            <h5 className="font-bold text-dark text-center">
+              <em>The White Rose </em>
+            </h5>
           </div>
 
           <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
@@ -145,68 +146,31 @@ function Home() {
               alt="Flower 4"
               className="w-100 h-75 my-3 object-fit-cover"
             ></img>
-            <h5 className="font-bold text-dark text-center"><em>Red Rose Bouquet </em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$20.00</h6>
+            <h5 className="font-bold text-dark text-center">
+              <em>Red Rose Bouquet </em>
+            </h5>
           </div>
-
-          <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
-            <img
-              src="./s6.png"
-              alt="Flower 1"
-              className="w-100 h-75 my-3 object-fit-cover"
-            ></img>
-
-            <h5 className="font-bold text-dark text-center"><em>Heart's Desire </em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$13.00</h6>
-          </div>
-
-          <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
-            <img
-              src="./s7.png"
-              alt="Flower 2"
-              className="w-100 h-75 my-3 object-fit-cover"
-            ></img>
-            <h5 className="font-bold text-dark text-center"><em>Assorted Roses </em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$12.00</h6>
-          </div>
-
-          <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
-            <img
-              src="./s5.png"
-              alt="Flower 3"
-              className="w-100 h-75 my-3 object-fit-cover"
-            ></img>
-            <h5 className="font-bold text-dark text-center"><em>Roses Surprise</em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$14.00</h6>
-          </div>
-
-          <div className="col-lg-3 col-md-6 col-12 m-0 p-3">
-            <img
-              src="./s8.png"
-              alt="Flower 4"
-              className="w-100 h-75 my-3 object-fit-cover"
-            ></img>
-            <h5 className="font-bold text-dark text-center"><em>Red Rose Bouquet </em></h5>
-            <h6 className="font-normal text-center" style={{ color: "#BF936B" }}>$15.00</h6>
-          </div>
-
         </div>
       </div>
 
-      <div className="row m-0 p-0">
+      <div className="row m-0 p-3 bg-light">
         <div className="col-lg-10 col-12 m-0 p-0 m-auto">
-            <div className="row m-0 p-5">
-                <div className="col-lg-6 col-12">
-                    <img src="./p1.jpg" className="w-100 h-100 object-fit-cover"></img>
-                </div>
-                <div className="col-lg-6 col-12">
-                    <img src="./p2.jpg" className="w-100 h-100 object-fit-cover"></img>
-                </div>
+          <div className="row m-0 p-5">
+            <div className="col-lg-6 col-12">
+              <img
+                src="./p1.jpg"
+                className="w-100 h-100 object-fit-cover"
+              ></img>
             </div>
+            <div className="col-lg-6 col-12">
+              <img
+                src="./p2.jpg"
+                className="w-100 h-100 object-fit-cover"
+              ></img>
+            </div>
+          </div>
         </div>
       </div>
-
-      <Footer/>
     </>
   );
 }
