@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 
 function Contact() {
@@ -15,33 +16,50 @@ function Contact() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log(formData);
+    try {
+      console.log("Form Data:", formData);
 
-    alert("Thank you! Your message has been sent.");
+      const response = await fetch("http://localhost:8000/user/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      message: "",
-    });
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Not able to send message");
+        return;
+      }
+
+      // Success message
+      alert(data.message);
+
+      // Clear form only after successful submission
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+      });
+    } catch (err) {
+      console.log("Error:", err);
+      alert("Server error. Please try again.");
+    }
   };
 
   return (
     <div className="bg-light">
-
-    
+      {/* Header Section */}
       <section className="container-fluid bg-light py-5">
-
         <div className="container py-5">
-
           <div className="row justify-content-center text-center">
-
             <div className="col-lg-8">
-
               <small className="text-secondary fw-semibold">
                 GET IN TOUCH
               </small>
@@ -51,29 +69,20 @@ function Contact() {
               </h1>
 
               <p className="text-secondary mt-4">
-                Have a question, want a custom bouquet, or planning
-                something special? We'd love to hear from you.
+                Have a question, want a custom bouquet, or planning something
+                special? We'd love to hear from you.
               </p>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
-
-     
-
+      {/* Contact Section */}
       <section className="container py-5">
-
         <div className="row g-5">
 
           {/* LEFT - CONTACT INFORMATION */}
-
           <div className="col-lg-5">
-
             <div className="pe-lg-5">
 
               <small className="text-secondary fw-semibold">
@@ -85,67 +94,41 @@ function Contact() {
               </h2>
 
               <p className="text-secondary mt-4">
-                Whether you have a question about our flowers,
-                need help choosing the perfect arrangement, or
-                want to create something completely unique,
-                our team is here to help.
+                Whether you have a question about our flowers, need help
+                choosing the perfect arrangement, or want to create something
+                completely unique, our team is here to help.
               </p>
 
-
               {/* Email */}
-
               <div className="d-flex align-items-start mt-5">
-
-                <div className="fs-4 me-3">
-                  ✉
-                </div>
+                <div className="fs-4 me-3">✉</div>
 
                 <div>
-                  <h6 className="fw-bold mb-1">
-                    Email
-                  </h6>
-
+                  <h6 className="fw-bold mb-1">Email</h6>
                   <p className="text-secondary mb-0">
                     hello@fiama.com
                   </p>
                 </div>
-
               </div>
 
-
               {/* Phone */}
-
               <div className="d-flex align-items-start mt-4">
-
-                <div className="fs-4 me-3">
-                  ☎
-                </div>
+                <div className="fs-4 me-3">☎</div>
 
                 <div>
-                  <h6 className="fw-bold mb-1">
-                    Phone
-                  </h6>
-
+                  <h6 className="fw-bold mb-1">Phone</h6>
                   <p className="text-secondary mb-0">
                     +91 98765 43210
                   </p>
                 </div>
-
               </div>
 
-
               {/* Address */}
-
               <div className="d-flex align-items-start mt-4">
-
-                <div className="fs-4 me-3" >
-                  ♡
-                </div>
+                <div className="fs-4 me-3">♡</div>
 
                 <div>
-                  <h6 className="fw-bold mb-1">
-                    Visit us
-                  </h6>
+                  <h6 className="fw-bold mb-1">Visit us</h6>
 
                   <p className="text-secondary mb-0">
                     123 Flower Street,
@@ -153,22 +136,14 @@ function Contact() {
                     Pune, Maharashtra
                   </p>
                 </div>
-
               </div>
 
-
               {/* Opening Hours */}
-
               <div className="d-flex align-items-start mt-4">
-
-                <div className="fs-4 me-3">
-                  ◷
-                </div>
+                <div className="fs-4 me-3">◷</div>
 
                 <div>
-                  <h6 className="fw-bold mb-1">
-                    Opening Hours
-                  </h6>
+                  <h6 className="fw-bold mb-1">Opening Hours</h6>
 
                   <p className="text-secondary mb-0">
                     Monday - Saturday
@@ -176,18 +151,13 @@ function Contact() {
                     9:00 AM - 7:00 PM
                   </p>
                 </div>
-
               </div>
 
             </div>
-
           </div>
 
-
           {/* RIGHT - CONTACT FORM */}
-
           <div className="col-lg-7">
-
             <div className="bg-white p-4 p-md-5 shadow-sm">
 
               <h3 className="fw-normal mb-4">
@@ -197,9 +167,7 @@ function Contact() {
               <form onSubmit={handleSubmit}>
 
                 {/* Name */}
-
                 <div className="mb-4">
-
                   <label
                     htmlFor="name"
                     className="form-label small fw-semibold"
@@ -217,14 +185,10 @@ function Contact() {
                     onChange={handleChange}
                     required
                   />
-
                 </div>
 
-
                 {/* Email */}
-
                 <div className="mb-4">
-
                   <label
                     htmlFor="email"
                     className="form-label small fw-semibold"
@@ -242,14 +206,10 @@ function Contact() {
                     onChange={handleChange}
                     required
                   />
-
                 </div>
 
-
                 {/* Phone */}
-
                 <div className="mb-4">
-
                   <label
                     htmlFor="phone"
                     className="form-label small fw-semibold"
@@ -265,15 +225,12 @@ function Contact() {
                     placeholder="Enter your phone number"
                     value={formData.phone}
                     onChange={handleChange}
+                    required
                   />
-
                 </div>
 
-
                 {/* Message */}
-
                 <div className="mb-4">
-
                   <label
                     htmlFor="message"
                     className="form-label small fw-semibold"
@@ -291,12 +248,9 @@ function Contact() {
                     onChange={handleChange}
                     required
                   ></textarea>
-
                 </div>
 
-
                 {/* Submit */}
-
                 <button
                   type="submit"
                   className="btn btn-dark rounded-0 px-5 py-3"
@@ -305,28 +259,19 @@ function Contact() {
                 </button>
 
               </form>
-
             </div>
-
           </div>
 
         </div>
-
       </section>
 
-
-      
+      {/* Bottom Section */}
       <section className="container-fluid py-5 bg-light">
-
         <div className="container py-5">
-
           <div className="row justify-content-center text-center">
-
             <div className="col-lg-8">
 
-              <div className="display-4 mb-3">
-                ❀
-              </div>
+              <div className="display-4 mb-3">❀</div>
 
               <h2 className="display-6">
                 <em>Every flower tells a story.</em>
@@ -337,11 +282,8 @@ function Contact() {
               </p>
 
             </div>
-
           </div>
-
         </div>
-
       </section>
 
     </div>
