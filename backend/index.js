@@ -466,6 +466,36 @@ app.post("/api/cart", async (req, res) => {
   }
 });
 
+app.get("/api/cart",async(req,res)=>{
+  try {
+    const cart = await exe(
+      `SELECT
+        cart.id,
+        cart.user_id,
+        cart.flower_id,
+        cart.quantity,
+        flowers.name,
+        flowers.price,
+        flowers.image,
+        flowers.category
+      FROM cart
+      INNER JOIN flowers
+        ON cart.flower_id = flowers.id
+      ORDER BY cart.id DESC`
+    );
+
+    return res.status(200).json(cart);
+
+  } catch (err) {
+
+    console.log("GET CART ERROR:", err);
+
+    return res.status(500).json({
+      error: "Unable to fetch cart",
+    });
+
+  }
+})
 
 // GET CART
 app.get("/api/cart/:user_id", async (req, res) => {
