@@ -470,20 +470,22 @@ app.post("/api/cart", async (req, res) => {
 // GET CART
 app.get("/api/cart/:user_id", async (req, res) => {
   try {
+
     const { user_id } = req.params;
 
     const cart = await exe(
-      `SELECT 
+      `SELECT
         cart.id,
         cart.user_id,
         cart.flower_id,
         cart.quantity,
-        flower.name,
-        flower.price,
-        flower.image,
-        flower.category
+        flowers.name,
+        flowers.price,
+        flowers.image,
+        flowers.category
       FROM cart
-      INNER JOIN flower ON cart.flower_id = flower.id
+      INNER JOIN flowers
+        ON cart.flower_id = flowers.id
       WHERE cart.user_id = ?
       ORDER BY cart.id DESC`,
       [user_id]
@@ -492,11 +494,13 @@ app.get("/api/cart/:user_id", async (req, res) => {
     return res.status(200).json(cart);
 
   } catch (err) {
+
     console.log("GET CART ERROR:", err);
 
     return res.status(500).json({
       error: "Unable to fetch cart",
     });
+
   }
 });
 
@@ -566,6 +570,9 @@ app.delete("/api/cart/:id", async (req, res) => {
     });
   }
 });
+
+
+
 // ==========================================
 // SERVER
 // ==========================================

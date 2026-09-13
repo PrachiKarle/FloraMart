@@ -3,10 +3,10 @@ import Footer from "./Footer";
 import Navbar from "./Navbar";
 import { Outlet } from "react-router-dom";
 
-function Header(){
+function Header({user}){
     return(
         <>
-        <Navbar/>
+        <Navbar user={user}/>
         <Outlet/>
         <Footer/>
         </>
