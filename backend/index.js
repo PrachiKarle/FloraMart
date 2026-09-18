@@ -1,7 +1,9 @@
 const express = require("express");
 const app = express();
+const path=require("path");
 
 const cors = require("cors");
+const multer=require("multer");
 
 // Database connection
 const exe = require("./db");
@@ -22,9 +24,30 @@ app.use(
   }),
 );
 
-// ==========================================
-// HOME
-// ==========================================
+
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/");
+  },
+
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({
+  storage: storage,
+});
+
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "public/uploads"))
+);
+
+
+
 
 app.get("/", (req, res) => {
   res.json({
@@ -32,9 +55,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// ==========================================
-// GET ALL FLOWERS
-// ==========================================
 
 app.get("/api/flower", async (req, res) => {
   try {
@@ -54,10 +74,6 @@ app.get("/api/flower", async (req, res) => {
     });
   }
 });
-
-// ==========================================
-// GET FLOWER BY ID
-// ==========================================
 
 app.get("/api/flower/:id", async (req, res) => {
   try {
@@ -83,17 +99,11 @@ app.get("/api/flower/:id", async (req, res) => {
   }
 });
 
-// ==========================================
-// ADD FLOWER
-// ==========================================
-
-app.post("/api/flower", async (req, res) => {
+app.post("/api/flower", upload.single("image"), async (req, res) => {
   try {
-    const { name, price, image, category } = req.body;
+    const { name, price, category } = req.body;
 
-    // Basic validation
-
-    if (!name || !price || !image || !category) {
+    if (!name || !price || !req.file || !category) {
       return res.status(400).json({
         error: "All fields are required",
       });
@@ -105,12 +115,18 @@ app.post("/api/flower", async (req, res) => {
       VALUES (?, ?, ?, ?)
     `;
 
-    const data = await exe(sql, [name, price, image, category]);
+    const data = await exe(sql, [
+      name,
+      price,
+      req.file.filename,
+      category,
+    ]);
 
     res.status(201).json({
       message: "Flower added successfully",
       data: data,
     });
+
   } catch (err) {
     console.log(err);
 
@@ -120,57 +136,84 @@ app.post("/api/flower", async (req, res) => {
   }
 });
 
-// ==========================================
-// UPDATE FLOWER
-// ==========================================
+app.put(
+  "/api/flower/:id",
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-app.put("/api/flower/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
+      const { name, price, category } = req.body;
 
-    const { name, price, image, category } = req.body;
+      // Validate normal fields
+      if (!name || !price || !category) {
+        return res.status(400).json({
+          error: "Name, price and category are required",
+        });
+      }
 
-    if (!name || !price || !image || !category) {
-      return res.status(400).json({
-        error: "All fields are required",
+      let sql;
+      let data;
+
+      if (req.file) {
+        sql = `
+          UPDATE flowers
+          SET
+            name = ?,
+            price = ?,
+            image = ?,
+            category = ?
+          WHERE id = ?
+        `;
+
+        data = await exe(sql, [
+          name,
+          price,
+          req.file.filename,
+          category,
+          id,
+        ]);
+      }
+
+      else {
+        sql = `
+          UPDATE flowers
+          SET
+            name = ?,
+            price = ?,
+            category = ?
+          WHERE id = ?
+        `;
+
+        data = await exe(sql, [
+          name,
+          price,
+          category,
+          id,
+        ]);
+      }
+      
+      if (data.affectedRows === 0) {
+        return res.status(404).json({
+          error: "Product not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Product updated successfully",
+        data: data,
+      });
+
+    } catch (err) {
+      console.log("UPDATE ERROR:", err);
+
+      res.status(500).json({
+        error: "Unable to update product",
       });
     }
-
-    const sql = `
-      UPDATE flowers
-      SET
-        name = ?,
-        price = ?,
-        image = ?,
-        category = ?
-      WHERE id = ?
-    `;
-
-    const data = await exe(sql, [name, price, image, category, id]);
-
-    if (data.affectedRows === 0) {
-      return res.status(404).json({
-        error: "Product not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Product updated successfully",
-      data: data,
-    });
-  } catch (err) {
-    console.log("UPDATE ERROR:", err);
-
-    res.status(500).json({
-      error: "Unable to update product",
-    });
   }
-});
-
-// ==========================================
-// DELETE FLOWER
-// ==========================================
+);
 
 app.delete("/api/flower/:id", async (req, res) => {
   try {
@@ -361,29 +404,6 @@ app.post("/user/contact", async (req, res) => {
   }
 });
 
-// ==========================================
-// GET ALL ORDERS
-// ==========================================
-
-app.get("/api/flower/order", async (req, res) => {
-  try {
-    const sql = "SELECT * FROM orders";
-
-    const data = await exe(sql);
-
-    res.json({
-      success: true,
-      data: data,
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      error: "Unable to access orders",
-    });
-  }
-});
-
 app.post("/api/admin/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -416,6 +436,25 @@ app.post("/api/admin/login", async (req, res) => {
   }
 });
 
+
+app.get("/api/flower/order", async (req, res) => {
+  try {
+    const sql = "SELECT * FROM orders";
+
+    const data = await exe(sql);
+
+    res.json({
+      success: true,
+      data: data,
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      error: "Unable to access orders",
+    });
+  }
+});
 
 
 // ADD TO CART
@@ -534,7 +573,6 @@ app.get("/api/cart/:user_id", async (req, res) => {
   }
 });
 
-
 // UPDATE CART QUANTITY
 app.put("/api/cart/:id", async (req, res) => {
   try {
@@ -571,7 +609,6 @@ app.put("/api/cart/:id", async (req, res) => {
   }
 });
 
-
 // DELETE CART ITEM
 app.delete("/api/cart/:id", async (req, res) => {
   try {
@@ -603,9 +640,6 @@ app.delete("/api/cart/:id", async (req, res) => {
 
 
 
-// ==========================================
-// SERVER
-// ==========================================
 
 app.listen(8000, () => {
   console.log("Server Started on http://localhost:8000");

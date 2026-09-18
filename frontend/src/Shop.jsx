@@ -150,7 +150,7 @@ function Shop() {
 
                 <div className="ratio ratio-1x1">
                   <img
-                    src={flower.image}
+                    src= {`http://localhost:8000/uploads/${flower.image}`}
                     alt={flower.name}
                     className="card-img-top object-fit-cover"
                   />

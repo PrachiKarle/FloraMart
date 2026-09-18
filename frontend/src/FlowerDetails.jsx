@@ -40,17 +40,13 @@ function FlowerDetails({ user }) {
   };
 
   useEffect(() => {
-    // console.log("User received in FlowerDetails:", user);
-
     fetchData();
   }, [id]);
 
   // Add to cart
   const AddToCart = async () => {
     try {
-      // console.log("User:", user);
-      // console.log("Flower:", flower);
-
+     
       // User not logged in
       if (!user) {
         alert("Please login first");
@@ -154,7 +150,7 @@ function FlowerDetails({ user }) {
         <div className="col-lg-6">
 
           <img
-            src={flower.image}
+            src={`http://localhost:8000/uploads/${flower.image}`}
             alt={flower.name}
             className="img-fluid w-100"
           />

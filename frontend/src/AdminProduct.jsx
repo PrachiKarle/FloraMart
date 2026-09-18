@@ -1,174 +1,175 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 function AdminProduct() {
-  // Show / hide form
   const [showForm, setShowForm] = useState(false);
-
-  // Products
   const [products, setProducts] = useState([]);
-
-  // Edit ID
-  // null = Add Product
-  // id = Edit Product
   const [editId, setEditId] = useState(null);
 
-  // Product form
   const [product, setProduct] = useState({
     name: "",
     price: "",
-    image: "",
+    image: null,
     category: "",
   });
 
-  // ==========================================
-  // GET ALL PRODUCTS
-  // ==========================================
+  const fileRef = useRef(null);
 
+  // =========================
+  // FETCH PRODUCTS
+  // =========================
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/flower");
+      const response = await fetch(
+        "http://localhost:8000/api/flower"
+      );
 
       const data = await response.json();
 
-      console.log(data);
+      console.log("Products:", data);
 
       if (response.ok) {
-        setProducts(data.data);
+        setProducts(data.data || []);
       } else {
         alert(data.error || "Failed to fetch products");
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
       alert("Unable to connect to server");
     }
   };
 
-  // Fetch products when page loads
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  // ==========================================
-  // HANDLE INPUT CHANGE
-  // ==========================================
-
+  // =========================
+  // INPUT CHANGE
+  // =========================
   const handleChange = (e) => {
-    setProduct({
-      ...product,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, files } = e.target;
+
+    if (name === "image") {
+      setProduct({
+        ...product,
+        image: files[0],
+      });
+    } else {
+      setProduct({
+        ...product,
+        [name]: value,
+      });
+    }
   };
 
-  // ==========================================
-  // ADD / UPDATE PRODUCT
-  // ==========================================
-
+  // =========================
+  // SUBMIT
+  // =========================
   const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  console.log("editId:", editId);
-  console.log("product:", product);
-
-  try {
-    let response;
-
-    if (editId !== null) {
-      response = await fetch(
-        `http://localhost:8000/api/flower/${editId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(product),
-        }
-      );
-    } else {
-      response = await fetch(
-        "http://localhost:8000/api/flower",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(product),
-        }
-      );
-    }
-
-    // Read response as text first
-    const text = await response.text();
-
-    console.log("Status:", response.status);
-    console.log("Server response:", text);
-
-    let data;
+    e.preventDefault();
 
     try {
-      data = JSON.parse(text);
+      const formData = new FormData();
+
+      formData.append("name", product.name);
+      formData.append("price", product.price);
+      formData.append("category", product.category);
+
+      // Only append image if a new image is selected
+      if (product.image instanceof File) {
+        formData.append("image", product.image);
+      }
+
+      let response;
+
+      if (editId !== null) {
+        // UPDATE
+        response = await fetch(
+          `http://localhost:8000/api/flower/${editId}`,
+          {
+            method: "PUT",
+            body: formData,
+          }
+        );
+      } else {
+        // ADD
+        if (!(product.image instanceof File)) {
+          alert("Please select an image");
+          return;
+        }
+
+        response = await fetch(
+          "http://localhost:8000/api/flower",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+      }
+
+      const text = await response.text();
+
+      console.log("Status:", response.status);
+      console.log("Server response:", text);
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        throw new Error(
+          "Server returned invalid JSON. Check your backend route."
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.message || "Operation failed"
+        );
+      }
+
+      if (editId !== null) {
+        alert("Product updated successfully");
+      } else {
+        alert("Product added successfully");
+      }
+
+      // Reset form
+      resetForm();
+
+      // Refresh products
+      fetchProducts();
     } catch (err) {
-      throw new Error(
-        "Server returned HTML instead of JSON. Check your backend PUT route."
-      );
+      console.error("PRODUCT ERROR:", err);
+      alert(err.message);
     }
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Operation failed"
-      );
-    }
-
-    if (editId !== null) {
-      alert("Product updated successfully");
-    } else {
-      alert("Product added successfully");
-    }
-
-    setProduct({
-      name: "",
-      price: "",
-      image: "",
-      category: "",
-    });
-
-    setEditId(null);
-    setShowForm(false);
-
-    fetchProducts();
-
-  } catch (err) {
-    console.error("UPDATE ERROR:", err);
-    alert(err.message);
-  }
-};
-
-  // ==========================================
-  // EDIT PRODUCT
-  // ==========================================
-
-  const EditProduct = (item) => {
-    // Put existing product data into form
-    setProduct({
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      category: item.category,
-    });
-
-    // Store ID
-    setEditId(item.id);
-
-    // Open form
-    setShowForm(true);
   };
 
-  // ==========================================
-  // DELETE PRODUCT
-  // ==========================================
+  // =========================
+  // EDIT PRODUCT
+  // =========================
+  const EditProduct = (item) => {
+    setProduct({
+      name: item.name || "",
+      price: item.price || "",
+      image: null,
+      category: item.category || "",
+    });
 
+    setEditId(item.id);
+    setShowForm(true);
+
+    // Clear file input
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+  };
+
+  // =========================
+  // DELETE PRODUCT
+  // =========================
   const DeleteProduct = async (id) => {
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?",
+      "Are you sure you want to delete this product?"
     );
 
     if (!confirmDelete) {
@@ -176,21 +177,33 @@ function AdminProduct() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/flower/${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `http://localhost:8000/api/flower/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
-      const data = await response.json();
+      const text = await response.text();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete product");
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        throw new Error("Invalid response from server");
       }
 
-      alert(data.message);
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.message || "Failed to delete product"
+        );
+      }
 
-      // Remove product from UI
+      alert(data.message || "Product deleted successfully");
+
       setProducts((oldProducts) =>
-        oldProducts.filter((item) => item.id !== id),
+        oldProducts.filter((item) => item.id !== id)
       );
     } catch (err) {
       console.error(err);
@@ -198,57 +211,66 @@ function AdminProduct() {
     }
   };
 
-  // ==========================================
-  // OPEN ADD PRODUCT FORM
-  // ==========================================
-
-  const openAddForm = () => {
-    // Make sure we are not in edit mode
-    setEditId(null);
-
-    // Empty form
+  // =========================
+  // RESET FORM
+  // =========================
+  const resetForm = () => {
     setProduct({
       name: "",
       price: "",
-      image: "",
+      image: null,
       category: "",
     });
 
-    // Show form
+    setEditId(null);
+    setShowForm(false);
+
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+  };
+
+  // =========================
+  // OPEN ADD FORM
+  // =========================
+  const openAddForm = () => {
+    setEditId(null);
+
+    setProduct({
+      name: "",
+      price: "",
+      image: null,
+      category: "",
+    });
+
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+
     setShowForm(true);
   };
 
-  // ==========================================
-  // CANCEL FORM
-  // ==========================================
-
+  // =========================
+  // CANCEL
+  // =========================
   const cancelForm = () => {
-    setShowForm(false);
-
-    setEditId(null);
-
-    setProduct({
-      name: "",
-      price: "",
-      image: "",
-      category: "",
-    });
+    resetForm();
   };
 
   return (
     <>
-      {/* ==========================================
-          ADD / EDIT FORM
-      ========================================== */}
-
+      {/* =========================
+          FORM
+      ========================= */}
       {showForm && (
         <div className="card border-0 shadow-sm mb-4">
           <div className="card-body p-4">
-            {/* Form Header */}
 
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h5 className="fw-bold mb-0">
-                {editId !== null ? "Edit Product" : "Add New Product"}
+                {editId !== null
+                  ? "Edit Product"
+                  : "Add New Product"}
               </h5>
 
               <button
@@ -260,16 +282,17 @@ function AdminProduct() {
               </button>
             </div>
 
-            {/* Form */}
-
-            <form onSubmit={handleSubmit}>
+            <form
+              onSubmit={handleSubmit}
+              encType="multipart/form-data"
+            >
               <div className="row g-3">
-                {/* =================================
-                    PRODUCT NAME
-                ================================= */}
 
+                {/* NAME */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Product Name</label>
+                  <label className="form-label fw-semibold">
+                    Product Name
+                  </label>
 
                   <input
                     type="text"
@@ -282,12 +305,11 @@ function AdminProduct() {
                   />
                 </div>
 
-                {/* =================================
-                    PRICE
-                ================================= */}
-
+                {/* PRICE */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Price</label>
+                  <label className="form-label fw-semibold">
+                    Price
+                  </label>
 
                   <input
                     type="number"
@@ -300,30 +322,34 @@ function AdminProduct() {
                   />
                 </div>
 
-                {/* =================================
-                    IMAGE
-                ================================= */}
-
+                {/* IMAGE */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Image</label>
+                  <label className="form-label fw-semibold">
+                    Image
+                  </label>
 
                   <input
-                    type="text"
+                    type="file"
                     name="image"
-                    value={product.image}
+                    ref={fileRef}
                     onChange={handleChange}
                     className="form-control"
-                    placeholder="./s27.png"
-                    required
+                    accept="image/*"
+                    required={editId === null}
                   />
+
+                  {editId !== null && (
+                    <small className="text-muted">
+                      Leave empty if you don't want to change the image.
+                    </small>
+                  )}
                 </div>
 
-                {/* =================================
-                    CATEGORY
-                ================================= */}
-
+                {/* CATEGORY */}
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Category</label>
+                  <label className="form-label fw-semibold">
+                    Category
+                  </label>
 
                   <select
                     name="category"
@@ -332,25 +358,38 @@ function AdminProduct() {
                     className="form-select"
                     required
                   >
-                    <option value="">Select Category</option>
+                    <option value="">
+                      Select Category
+                    </option>
 
-                    <option value="Roses">Roses</option>
+                    <option value="Roses">
+                      Roses
+                    </option>
 
-                    <option value="Bouquets">Bouquets</option>
+                    <option value="Bouquets">
+                      Bouquets
+                    </option>
 
-                    <option value="Wedding">Wedding</option>
+                    <option value="Wedding">
+                      Wedding
+                    </option>
 
-                    <option value="Gifts">Gifts</option>
+                    <option value="Gifts">
+                      Gifts
+                    </option>
                   </select>
                 </div>
 
-                {/* =================================
-                    BUTTONS
-                ================================= */}
-
+                {/* BUTTONS */}
                 <div className="col-12 mt-4">
-                  <button type="submit" className="btn btn-dark px-4 me-2">
-                    {editId !== null ? "Update Product" : "Add Product"}
+
+                  <button
+                    type="submit"
+                    className="btn btn-dark px-4 me-2"
+                  >
+                    {editId !== null
+                      ? "Update Product"
+                      : "Add Product"}
                   </button>
 
                   <button
@@ -360,57 +399,65 @@ function AdminProduct() {
                   >
                     Cancel
                   </button>
+
                 </div>
+
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* ==========================================
+      {/* =========================
           PRODUCT TABLE
-      ========================================== */}
-
+      ========================= */}
       <div className="card border-0 shadow-sm">
         <div className="card-body">
-          {/* Table Header */}
 
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="fw-bold mb-0">Products</h5>
 
-            <button className="btn btn-dark btn-sm" onClick={openAddForm}>
+            <h5 className="fw-bold mb-0">
+              Products
+            </h5>
+
+            <button
+              className="btn btn-dark btn-sm"
+              onClick={openAddForm}
+            >
               + Add Product
             </button>
+
           </div>
 
-          {/* Table */}
-
           <div className="table-responsive">
+
             <table className="table align-middle">
+
               <thead className="table-light">
                 <tr>
                   <th>#</th>
                   <th>Product</th>
                   <th>Category</th>
                   <th>Price</th>
-                  {/* <th>Stock</th> */}
                   <th>Action</th>
                 </tr>
               </thead>
 
               <tbody>
+
                 {products.length > 0 ? (
+
                   products.map((item) => (
+
                     <tr key={item.id}>
-                      {/* ID */}
 
-                      <td>{item.id}</td>
+                      <td>
+                        {item.id}
+                      </td>
 
-                      {/* NAME */}
-
-                      <td className="fw-bold">{item.name}</td>
-
-                      {/* CATEGORY */}
+                      <td className="fw-bold">
+                        {item.name}
+                      </td>
 
                       <td>
                         <span className="badge bg-light text-dark border">
@@ -418,14 +465,11 @@ function AdminProduct() {
                         </span>
                       </td>
 
-                      {/* PRICE */}
-
-                      <td>₹{item.price}</td>
-
-                      {/* ACTION */}
+                      <td>
+                        ₹{item.price}
+                      </td>
 
                       <td>
-                        {/* EDIT */}
 
                         <button
                           className="btn btn-sm btn-outline-dark me-2"
@@ -434,26 +478,38 @@ function AdminProduct() {
                           Edit
                         </button>
 
-                        {/* DELETE */}
-
                         <button
                           className="btn btn-sm btn-outline-danger"
-                          onClick={() => DeleteProduct(item.id)}
+                          onClick={() =>
+                            DeleteProduct(item.id)
+                          }
                         >
                           Delete
                         </button>
+
                       </td>
+
                     </tr>
+
                   ))
+
                 ) : (
+
                   <tr>
-                    <td colSpan="6" className="text-center py-4">
+                    <td
+                      colSpan="5"
+                      className="text-center py-4"
+                    >
                       No products found
                     </td>
                   </tr>
+
                 )}
+
               </tbody>
+
             </table>
+
           </div>
         </div>
       </div>

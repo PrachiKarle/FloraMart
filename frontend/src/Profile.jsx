@@ -354,7 +354,7 @@ function Profile({ user }) {
                           <div className="col-md-2">
 
                             <img
-                              src={item.image}
+                              src={`http://localhost:8000/uploads/${item.image}`}
                               alt={item.name}
                               className="rounded img-fluid"
                               style={{
