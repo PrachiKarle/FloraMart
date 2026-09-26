@@ -1,11 +1,12 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
-const path=require("path");
+const path = require("path");
 
 const cors = require("cors");
-const multer=require("multer");
+const multer = require("multer");
 
-// Database connection
 const exe = require("./db");
 
 const bcrypt = require("bcryptjs");
@@ -19,11 +20,12 @@ app.use(express.static("public"));
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:3000",
     credentials: true,
   }),
 );
 
+const authMiddleware = require("./authMiddleware");
 
 
 
@@ -45,6 +47,13 @@ app.use(
   "/uploads",
   express.static(path.join(process.cwd(), "public/uploads"))
 );
+
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 
 
 
@@ -245,46 +254,80 @@ app.delete("/api/flower/:id", async (req, res) => {
 
 //login
 
-app.post("/api/user/signup", async (req, res) => {
+app.post("/api/customer/signup", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+    } = req.body;
 
-    if (!name || !email || !password) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !phone ||
+      !address ||
+      !city ||
+      !state ||
+      !pincode
+    ) {
       return res.status(400).json({
-        error: "Name, email and password are required",
+        error: "All customer details are required",
       });
     }
 
     // Check existing email
-    const existingUser = await exe("SELECT * FROM customers WHERE email = ?", [
-      email,
-    ]);
+    const existingCustomer = await exe(
+      "SELECT * FROM customers WHERE email = ?",
+      [email]
+    );
 
-    console.log("Existing users:", existingUser);
+    console.log("Existing customers:", existingCustomer);
 
-    if (existingUser.length > 0) {
+    if (existingCustomer.length > 0) {
       return res.status(400).json({
         error: "Email already registered",
       });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
+    // Insert customer
     const sql = `
-      INSERT INTO customers (name, email, password)
-      VALUES (?, ?, ?)
+      INSERT INTO customers
+      (name, email, password, phone, address, city, state, pincode)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const result = await exe(sql, [name, email, hashedPassword]);
+    const result = await exe(sql, [
+      name,
+      email,
+      hashedPassword,
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+    ]);
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "Customer registered successfully",
+      customerId: result.insertId,
     });
+
   } catch (err) {
+    console.error("Customer signup error:", err);
+
     res.status(500).json({
-      error: "Unable to create account",
+      error: "Unable to create customer account",
       details: err.message,
     });
   }
@@ -335,7 +378,7 @@ app.post("/api/user/login", async (req, res) => {
         name: user.name,
         email: user.email,
       },
-      "floramart_secret_key",
+      process.env.JWT_SECRET,
       {
         expiresIn: "1d",
       },
@@ -421,7 +464,7 @@ app.post("/api/admin/login", async (req, res) => {
 
     const token = jwt.sign(
       { id: Admin.id, name: Admin.name, email: Admin.email },
-      "floramart_secret_key",
+      process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
     return res.status(200).json({
@@ -639,6 +682,113 @@ app.delete("/api/cart/:id", async (req, res) => {
 });
 
 
+
+//payment gateway
+
+
+app.post(
+  "/api/payment/create-order",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { amount } = req.body;
+
+      if (!amount || Number(amount) <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid amount",
+        });
+      }
+
+      const options = {
+        amount: Math.round(Number(amount) * 100),
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+      };
+
+      const order = await razorpay.orders.create(options);
+
+      // console.log("Razorpay Order Created:", order.id);
+
+      return res.status(200).json({
+        success: true,
+        order: order,
+      });
+
+    } catch (error) {
+      console.error("CREATE ORDER ERROR:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to create payment order",
+      });
+    }
+  }
+);
+
+
+const crypto = require("crypto");
+
+app.post(
+  "/api/payment/verify",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+      } = req.body;
+
+      if (
+        !razorpay_order_id ||
+        !razorpay_payment_id ||
+        !razorpay_signature
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment details are missing",
+        });
+      }
+
+      const generated_signature = crypto
+        .createHmac(
+          "sha256",
+          process.env.RAZORPAY_KEY_SECRET
+        )
+        .update(
+          razorpay_order_id +
+          "|" +
+          razorpay_payment_id
+        )
+        .digest("hex");
+
+      if (generated_signature !== razorpay_signature) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment verification failed",
+        });
+      }
+
+      // console.log("Payment verified:", razorpay_payment_id);
+
+      // Payment is verified successfully
+
+      return res.status(200).json({
+        success: true,
+        message: "Payment verified successfully",
+      });
+
+    } catch (error) {
+      console.error("PAYMENT VERIFY ERROR:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Payment verification error",
+      });
+    }
+  }
+);
 
 
 app.listen(8000, () => {

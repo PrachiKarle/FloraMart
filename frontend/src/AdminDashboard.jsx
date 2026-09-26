@@ -122,9 +122,7 @@ function AdminDashboard() {
               Customers
             </button>
 
-            <button className="btn btn-dark text-white w-100 text-start mb-2">
-              Reports
-            </button>
+            
 
           </div>
         </div>
@@ -210,7 +208,7 @@ function AdminDashboard() {
                             <div className="d-flex align-items-center">
 
                               <img
-                                src={item.image}
+                                src={`http://localhost:8000/uploads/${item.image}`}
                                 alt={item.name}
                                 className="rounded me-3"
                                 style={{

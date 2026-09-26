@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 
 function Signup() {
-  const [user, setUser] = useState({
+  const [customer, setCustomer] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
   });
 
   const handleChange = (e) => {
-    setUser({
-      ...user,
+    setCustomer({
+      ...customer,
       [e.target.name]: e.target.value,
     });
   };
@@ -18,15 +23,14 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check password
-    if (user.password !== user.confirmPassword) {
+    if (customer.password !== customer.confirmPassword) {
       alert("Passwords do not match");
       return;
     }
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/user/signup",
+        "http://localhost:8000/api/customer/signup",
         {
           method: "POST",
 
@@ -35,9 +39,14 @@ function Signup() {
           },
 
           body: JSON.stringify({
-            name: user.name,
-            email: user.email,
-            password: user.password,
+            name: customer.name,
+            email: customer.email,
+            password: customer.password,
+            phone: customer.phone,
+            address: customer.address,
+            city: customer.city,
+            state: customer.state,
+            pincode: customer.pincode,
           }),
         }
       );
@@ -49,10 +58,9 @@ function Signup() {
         return;
       }
 
-      alert("Account created successfully");
+      alert("Customer account created successfully");
 
       window.location.href = "/login";
-
     } catch (err) {
       console.error("Signup error:", err);
       alert("Unable to connect to server");
@@ -62,13 +70,13 @@ function Signup() {
   return (
     <div className="container py-5">
       <div className="row justify-content-center">
-        <div className="col-md-5">
+        <div className="col-md-6">
 
           <div className="card border-0 shadow">
             <div className="card-body p-4">
 
               <h3 className="text-center fw-bold mb-2">
-                Create Account
+                Create Customer Account
               </h3>
 
               <p className="text-center text-muted mb-4">
@@ -86,10 +94,10 @@ function Signup() {
                   <input
                     type="text"
                     name="name"
-                    value={user.name}
+                    value={customer.name}
                     onChange={handleChange}
                     className="form-control"
-                    placeholder="Enter your name"
+                    placeholder="Enter your full name"
                     required
                   />
                 </div>
@@ -103,10 +111,96 @@ function Signup() {
                   <input
                     type="email"
                     name="email"
-                    value={user.email}
+                    value={customer.email}
                     onChange={handleChange}
                     className="form-control"
                     placeholder="Enter your email"
+                    required
+                  />
+                </div>
+
+                {/* PHONE */}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Phone
+                  </label>
+
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={customer.phone}
+                    onChange={handleChange}
+                    className="form-control"
+                    placeholder="Enter your phone number"
+                    required
+                  />
+                </div>
+
+                {/* ADDRESS */}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Address
+                  </label>
+
+                  <textarea
+                    name="address"
+                    value={customer.address}
+                    onChange={handleChange}
+                    className="form-control"
+                    placeholder="Enter your delivery address"
+                    rows="3"
+                    required
+                  />
+                </div>
+
+                {/* CITY */}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    City
+                  </label>
+
+                  <input
+                    type="text"
+                    name="city"
+                    value={customer.city}
+                    onChange={handleChange}
+                    className="form-control"
+                    placeholder="Enter your city"
+                    required
+                  />
+                </div>
+
+                {/* STATE */}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    State
+                  </label>
+
+                  <input
+                    type="text"
+                    name="state"
+                    value={customer.state}
+                    onChange={handleChange}
+                    className="form-control"
+                    placeholder="Enter your state"
+                    required
+                  />
+                </div>
+
+                {/* PINCODE */}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Pincode
+                  </label>
+
+                  <input
+                    type="text"
+                    name="pincode"
+                    value={customer.pincode}
+                    onChange={handleChange}
+                    className="form-control"
+                    placeholder="Enter your pincode"
+                    maxLength="6"
                     required
                   />
                 </div>
@@ -120,7 +214,7 @@ function Signup() {
                   <input
                     type="password"
                     name="password"
-                    value={user.password}
+                    value={customer.password}
                     onChange={handleChange}
                     className="form-control"
                     placeholder="Create password"
@@ -137,7 +231,7 @@ function Signup() {
                   <input
                     type="password"
                     name="confirmPassword"
-                    value={user.confirmPassword}
+                    value={customer.confirmPassword}
                     onChange={handleChange}
                     className="form-control"
                     placeholder="Confirm password"
@@ -156,7 +250,10 @@ function Signup() {
 
               <div className="text-center mt-3">
                 <span>Already have an account? </span>
-                <a href="/login">Login</a>
+
+                <a href="/login">
+                  Login
+                </a>
               </div>
 
             </div>

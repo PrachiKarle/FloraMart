@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import "./App.css";
 
@@ -8,9 +8,10 @@ function Navbar({ user }) {
   useEffect(() => {
     if (!user) {
       setStatus(false);
+    } else {
+      setStatus(true);
     }
-    setStatus(true);
-  }, []);
+  }, [user]);
   return (
     <nav
       className="navbar navbar-expand-lg py-3 px-5 bg-white"
@@ -66,7 +67,7 @@ function Navbar({ user }) {
           <li className="nav-item">
             {status ? (
               <NavLink to="/profile" className="nav-link">
-                Welcome, {user.name}
+                Welcome, {user?.name || "Guest"}
               </NavLink>
             ) : (
               <NavLink to="/login" className="nav-link">
